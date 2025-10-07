@@ -1,0 +1,245 @@
+---
+title: "BICAM"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BICAM}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r initial, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The function ***`BICAM`*** (Bayesian Immune Cell Abundance Model) uses Bayesian hierarchical models to model abundance data for cell populations with a predictor variable. This models each cell type simultaneously while incorporating potential relationships between the cell populations. The relationship utilized in this model is user dependent based on the function inputs for setting up the covariance structure. This package utilizes *rjags* and *runjags* packages to run Gibbs sampling for posterior estimation.  
+
+Back to BTIME Repo: https://github.com/FridleyLab/BTIME  
+
+# Installation
+
+Before running this package, the JAGS (Just Another Gibbs Sampler) program needs to be installed. You can download from  https://sourceforge.net/projects/mcmc-jags/files/.  
+
+
+```{r packageload, message=FALSE, warning=FALSE}
+library(BTIME)
+
+```
+
+# Dataset
+
+```{r datasetup}
+
+# dfmif <- read.csv('~/mIF_Test_Data.csv', check.names = FALSE) # Load in data
+# dat <- dfmif |> dplyr::select(suid,total,stage,M1,M2,M3) # Construct data to match setup of image below
+
+```
+
+For setting up your data, you will want to set your data into a data frame. For one predictor/covariate, the setup should be as follows:  
+
+*1st column*: Subject IDs  
+*2nd column*: Total Cell Counts  
+*3rd column*: Predictor Variable  
+*Last M columns*: Parameters of Interest Counts  
+
+For two or more predictors/covariates, the setup should be as follows:  
+
+*1st column*: Subject IDs  
+*2nd column*: Total Cell Counts  
+*Next ncov columns*: Predictor Variables  
+*Last M columns*: Parameters of Interest Counts  
+
+<br>
+**Example:**  
+Below shows the set up of the data frame for one predictor (A) and two or more predictors (B). For (A), we have "Sub. IDs" in the first column, "Total Cell Count"  in the second column, the stage of cancer (0 = "Low" (1 or 2), & 1 = "High" (3 or 4)) as the predictor variable in the third column, and markers M1, M2, and M3 in the last 3 columns (3 markers/parameters of interest). For (B), we have "Sub. IDs" in the first column, "Total Cell Count"  in the second column, the stage of cancer and age at diagnosis as the predictor variables in the third & fourth columns, respectively, and markers M1, M2, and M3 in the last 3 columns (3 markers/parameters of interest).  
+
+
+<left>
+  <img src="Data_Setup.png" height="300" width="650" alt="Data setup">
+</left>
+
+<br>
+# Using BICAM
+
+**Required inputs:**    
+*dat* - Data frame containing data set constructed as shown above  
+*M* - Number of parameters/markers of interest  
+*adapt* - Number of adaptation iterations for initializing JAGS model (iterations removed from analysis)  
+*burn* - Number of burn-in iterations (iterations removed from analysis)  
+*it* - Number of sampling iterations used for posterior analysis  
+
+**Optional inputs:**  
+*thin* - Thinning Interval (default = 1)  
+*ran_eff* - 0 for NO repeated measurements, 1 FOR repeated measurements (default = 1)  
+*ncov* - Number of predictors/covariates input in the model (default = 1)  
+*chains* - Number of chains to run in the JAGS model (default = 4)  
+*cores* - Number of cores to use to run the JAGS model (default = 4) (must be $\geq$ chains for maximum efficiency)  
+*v0_mu_logit* - Predicted proportion of the parameters of interest (default = 0.01 ---> 1%)  
+*model* - Covariance structure used in Bayesian model (default = "Unstr") (See "BICAM: Covariance Structures" article for more information about the different covariance structures)  
+*dis* - Distance matrix used for exponential decay model (required if using exp. decay model) (default = NULL)  
+*tree* - Tree-structured covariance matrix used for tree model (required if using tree or scaled tree model) (default = NULL)  
+*treelevels* - List of matrices for the multi-level, tree-structured covariance matrix for 'TreeLevels' model (required if using multi-level tree model) (default = NULL)
+
+
+```{r modelrun, echo=TRUE, results='hide'}
+
+##################### Unstructured Model #####################
+# posterior_unstr <- BICAM(dat = dat,
+#                          M = 3,
+#                          adapt = 2000,
+#                          burn = 100,
+#                          it = 100)
+
+##################### Exponential Decay Model #####################
+
+# WILL GET ERROR IF 'dis' MATRIX IS NOT SUPPLIED. 'dis' MUST ALSO BE INVERTIBLE.
+
+# dis <- matrix(c(0,1,1,
+#                  1,0,2,
+#                  1,2,0),nrow = 3)
+
+# posterior_expdecay <- BICAM(dat = dat,
+#                          M = 3,
+#                          adapt = 2000,
+#                          burn = 100,
+#                          it = 100,
+#                          model = "ExpDecay",
+#                          dis = dis)
+
+##################### Tree Covariance Structure Model #####################
+
+# WILL GET ERROR IF 'tree' MATRIX IS NOT SUPPLIED. 'tree' MUST ALSO BE INVERTIBLE.
+
+# tree <- matrix(c(1,1,1,
+#                 1,2,1,
+#                 1,1,2),nrow = 3)
+
+# posterior_tree <- BICAM(dat = dat,
+#                          M = 3,
+#                          adapt = 2000,
+#                          burn = 100,
+#                          it = 100,
+#                          model = "Tree",
+#                          tree = tree)
+
+########### Scaled Tree
+
+# posterior_treescaled <- BICAM(dat = dat,
+#                          M = 3,
+#                          adapt = 2000,
+#                          burn = 100,
+#                          it = 100,
+#                          model = "TreeScaled",
+#                          tree = tree)
+
+
+##################### Multi-Level Tree Covariance Structure Model #####################
+
+# WILL GET ERROR IF 'treelevels' MATRIX IS NOT SUPPLIED.
+
+# treelevels <- list(matrix(c(1,1,1,
+#                             1,1,1,
+#                             1,1,1),nrow = 3),
+#                    matrix(c(0,0,0,
+#                             0,1,0,
+#                             0,0,1),nrow = 3))
+
+# posterior_tree <- BICAM(dat = dat,
+#                          M = 3,
+#                          adapt = 2000,
+#                          burn = 100,
+#                          it = 100,
+#                          model = "TreeLevels",
+#                          treelevels = treelevels)
+
+```
+
+# BICAM Output
+
+The *BICAM* function returns a list of 6 items:  
+
+**Output Item 1: Posterior Samples**
+
+Posterior samples for each monitored variable. Below shows an example of a list of first 9 iterations of 6 monitored variables after the burn-in phase.  
+
+```{r post1, echo=TRUE, results='hide'}
+# posterior_unstr[[1]]
+
+```
+
+<left>
+  <img src="BICAM_Output_1.png" height="275" width="500" alt="Posterior samples">
+</left>
+
+<br>
+**Output Item 2: Computation Time**
+
+Computation time of the entire function (not just sampling).  
+
+```{r post2, echo=TRUE, results='hide'}
+# posterior_unstr[[2]]
+
+```
+
+<left>
+  <img src="BICAM_Output_2.png" height="35" width="250" alt="Computation time">
+</left>
+
+<br>
+**Output Item 3: Model String**
+
+String of the JAGS model based on model choice and function inputs. The string uses HTML syntax.  
+
+```{r post3, echo=TRUE, results='hide'}
+# posterior_unstr[[3]]
+
+```
+
+<left>
+  <img src="BICAM_Output_3.png" height="125" width="700" alt="Model string">
+</left>
+
+<br>
+**Output Item 4: Initial Values**
+
+Lists of initial values for each chain for each variable in the model that follows a distribution. Below is an example of the initial values for the variable 'p_temp' for the first chain.  
+
+```{r post4, echo=TRUE, results='hide'}
+# posterior_unstr[[4]]
+
+```
+
+<left>
+  <img src="BICAM_Output_4.png" height="300" width="200" alt="Initial values">
+</left>
+
+<br>
+**Output Item 5: Data**
+
+Data that the user had input into the JAGS model.  
+
+```{r post5, echo=TRUE, results='hide'}
+# posterior_unstr[[5]]
+
+```
+
+<left>
+  <img src="BICAM_Output_5.png" height="450" width="500" alt="Data input">
+</left>
+
+<br>
+**Output Item 6: Monitored Variables**
+
+List of variables monitored by the JAGS model.  
+
+```{r post6, echo=TRUE, results='hide'}
+# posterior_unstr[[6]]
+
+```
+
+<left>
+  <img src="BICAM_Output_6.png" height="55" width="650" alt="Monitored variables">
+</left>
+

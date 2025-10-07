@@ -1,0 +1,180 @@
+---
+title: "BICAM: Covariance Structures"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BICAM: Covariance Structures}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r initial, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The function ***`BICAM`*** (Bayesian Immune Cell Abundance Model) uses Bayesian hierarchical modeling to model abundance data for cell populations with a predictor variable. This models each cell type simultaneously while incorporating potential relationships between the cell populations. The relationship utilized in this model is user dependent based on the function inputs for setting up the covariance structure. This package utilizes *rjags* and *runjags* packages to run Gibbs sampling for posterior estimation.  
+
+Back to BTIME Repo: https://github.com/FridleyLab/BTIME  
+
+# Covariance Structures
+
+The covariance matrix will be denoted by T. Here, we will discuss the 5 covariance structures:  
+
+1. Unstructured  
+2. Exponential Decay  
+3. Tree  
+4. Scaled Tree  
+5. Multi-Level Tree  
+
+## Example  
+
+For demonstrating the setup of the different covariance structures, we will use the multilevel immune differentiation path for various T-Cells as shown below:  
+
+<center>
+  <img src="Immune_Paths.png" height="500" width="350" alt="Immune differentiation paths">
+</center>
+
+The structure of these hierarchical immune differentiation paths are utilized in the Exponential Decay, Tree, Scaled Tree, and Multi-Level Tree models.  
+
+
+## 1. Unstructured
+
+For the ***`BICAM`*** function, the input for 'model' parameter is "Unstr". With the unstructured model, the covariance matrices follow an **inverse Wishart** distribution. 
+
+$$ T \sim IW $$
+
+This allows for incorporating the relationships between the different cell types in the model without needing to know the formal covariance structure.  
+
+
+## 2. Exponential Decay  
+
+For the ***`BICAM`*** function, the input for 'model' parameter is "ExpDecay". The equation for the covariance matrix for this model is:
+
+$$ T = \Sigma \cdot \Delta \cdot \Sigma  $$
+where $\Sigma = \tau I_m$, $\tau = \sqrt{\tau^2}$, and $\tau^2 \sim InvGamma$. For $\Delta$, we have,  
+
+$$ \Delta = 
+\begin{bmatrix}
+1 & \rho_{12} & \cdots & \rho_{1m} \\
+\rho_{21} & 1 & \cdots & \rho_{2m} \\
+\vdots & \vdots & \ddots & \vdots \\
+\rho_{m1} & \rho_{m2} & \cdots & 1
+\end{bmatrix}
+ $$
+
+where $\rho_{st} = exp(-d_{st}/\zeta$) and $\zeta \sim Gamma$. We then utilize the immune differentiation path to determine our distances $d_{st}$ (the Root is not included in these distances). For example, the distance between a T-Cell and an Activated Cytotoxic T-Cell would be $d_{st} = 1 + 0.5 = 1.5$. Once the distances for each pair of cell types is determined, this becomes the 'dis' matrix that would be input into the ***`BICAM`*** function. Below is the distance matrix for these cell types in this immune differentiation path (order of columns and rows is T-Cell, Cytotoxic T-cell, Activated Cytotoxic T-Cell, Helper T-Cell, Activated Helper T-Cell, T-Reg, and Activated T-Reg):  
+
+$$ d_{st} = 
+\begin{bmatrix}
+0 & 1 & 1.5 & 1 & 1.5 & 2 & 2.5 \\
+1 & 0 & 0.5 & 2 & 2.5 & 3 & 3.5 \\
+1.5 & 0.5 & 0 & 2.5 & 3 & 3.5 & 4 \\
+1 & 2 & 2.5 & 0 & 0.5 & 1 & 1.5 \\
+1.5 & 2.5 & 3 & 0.5 & 0 & 1.5 & 2 \\
+2 & 3 & 3.5 & 1 & 1.5 & 0 & 0.5 \\
+2.5 & 3.5 & 4 & 1.5 & 2 & 0.5 & 0
+\end{bmatrix}
+ $$
+
+
+## 3. Tree  
+
+For the ***`BICAM`*** function, the input for 'model' parameter is "Tree". For the Tree model, we have:
+
+$$ T = 
+\begin{bmatrix}
+1 & \sigma_{12} & \cdots & \sigma_{1m} \\
+\sigma_{21} & 1 & \cdots & \sigma_{2m} \\
+\vdots & \vdots & \ddots & \vdots \\
+\sigma_{m1} & \sigma_{m2} & \cdots & 1
+\end{bmatrix}
+ $$
+
+To determine each $\sigma_{st}$, we count the distance to the Root of the tree for both cell types and take the Least Common Ancestor (LCA). The LCA is the lesser of the two distances to the Root. For example, if we wanted the covariance between a T-Cell and an Activated Cytotoxic T-Cell, we would have a distance of 1 to the Root for T-Cell and distance of 2.5 for the Activated Cytotoxic T-Cell. Since LCA(1,2.5) = 1, the covariance between the two cell types would be 1. Once these covariances are determined, this becomes the 'tree' matrix that would be the input into the ***`BICAM`*** function. Below is the tree matrix for these cell types in this immune differentiation path (order of columns and rows is T-Cell, Cytotoxic T-cell, Activated Cytotoxic T-Cell, Helper T-Cell, Activated Helper T-Cell, T-Reg, and Activated T-Reg):
+
+$$ T = 
+\begin{bmatrix}
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 2 & 2 & 1 & 1 & 1 & 1 \\
+1 & 2 & 2.5 & 1 & 1 & 1 & 1 \\
+1 & 1 & 1 & 2 & 2 & 2 & 2 \\
+1 & 1 & 1 & 2 & 2.5 & 2 & 2 \\
+1 & 1 & 1 & 2 & 2 & 3 & 3 \\
+1 & 1 & 1 & 2 & 2 & 3 & 3.5
+\end{bmatrix}
+ $$
+
+
+## 4. Scaled Tree
+
+For the ***`BICAM`*** function, the input for 'model' parameter is "TreeScaled". The Scaled Tree model, we have:  
+
+$$ T = \lambda \cdot
+\begin{bmatrix}
+1 & \sigma_{12} & \cdots & \sigma_{1m} \\
+\sigma_{21} & 1 & \cdots & \sigma_{2m} \\
+\vdots & \vdots & \ddots & \vdots \\
+\sigma_{m1} & \sigma_{m2} & \cdots & 1
+\end{bmatrix}
+ $$
+ where the $\sigma_{st}$ values are determined using the same process as the Tree model. The $\lambda$ will follow a Gamma distribution which will allow for the covariance structure to stay intact but will scale it.  
+
+
+## 5. Multi-Level Tree
+
+For the ***`BICAM`*** function, the input for 'model' parameter is "TreeLevels". For this model, the base covariance is the same as the Tree and the Scaled Tree model (shown under 3.). Here, we break down the covariance structure based on the number of levels this are in the immune differentiation paths. Evaluating the first figure, we can see that there are 4 separate levels as shown below:
+
+<center>
+  <img src="Multi_Level_Immune_Paths.png" height="350" width="400" alt="Multi-level immune differentiation paths">
+</center>
+
+This leads to this equation:
+
+
+$$ T = \omega_1
+\begin{bmatrix}
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 1 & 1 & 1 & 1 & 1 & 1
+\end{bmatrix} 
++ \omega_2
+\begin{bmatrix}
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 1 & 1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 1 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 & 1 & 1 & 1 \\
+0 & 0 & 0 & 1 & 1 & 1 & 1 \\
+0 & 0 & 0 & 1 & 1 & 1 & 1 \\
+0 & 0 & 0 & 1 & 1 & 1 & 1
+\end{bmatrix}
++ \omega_3
+\begin{bmatrix}
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 1 & 1 \\
+0 & 0 & 0 & 0 & 0 & 1 & 1
+\end{bmatrix}
++ \omega_4
+\begin{bmatrix}
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0.5 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0.5 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0.5
+\end{bmatrix}
+ $$
+
+where each $\omega$ follows a Gamma distribution. 
+
+
