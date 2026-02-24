@@ -1,13 +1,12 @@
-84a040fc50775667e1eedc7ded18217f *DESCRIPTION
+7ef84351d52563e09e7c6384abcad2ae *DESCRIPTION
 80628177fbb41d412bb01a9b88a9207e *LICENSE
 3f88cf37a611fa85da0105800e1565d0 *NAMESPACE
-d16d3a0eb415ca0e2251c46ddda949a6 *R/BICAM.R
-bb4784461c8e86ff0b2d0b1ec9b11886 *R/dat.R
+e192c11ed5cc2be602d4d63847ab5fa6 *NEWS.md
+e9efdd84cad496b8ac055dc2023cfbaf *R/BICAM.R
 d8eff81ff193288ff466bfeaf8dcc6e4 *build/vignette.rds
-9b23481c9d90f411f381349236ebf6ee *data/dat.rda
 13aafdd4842c18522b8202495444ecc3 *inst/doc/BICAM.R
 3d13bce7d5b725ad051ba5e573eb171e *inst/doc/BICAM.Rmd
-196fd37d7dcdb70267f0d73fc3ac5f49 *inst/doc/BICAM.html
+8cc34889a77b62eb963e73992b6afac1 *inst/doc/BICAM.html
 3d116525111ea843529028aea6cc49ee *inst/doc/BICAM_Cov.R
 9423ebd2a1bcb7c17a05caf8f94d8dac *inst/doc/BICAM_Cov.Rmd
 7960293800d63f22f144cde9821dd7f3 *inst/doc/BICAM_Cov.html
@@ -41,8 +40,7 @@ aaa610b29d895e1128447e76b9bc0076 *inst/docs/bootstrap-toc.js
 c7cd925bcd8ce39806813944498aaf78 *inst/docs/reference/BTIME.html
 421c600a847a72a90da3dcff6daf7e54 *inst/docs/reference/index.html
 ca551f885ba6e34d80997bf94e1d3bfa *inst/docs/sitemap.xml
-8517afcfe3caa6bb15c1ac0e042c5b40 *man/BICAM.Rd
-467ed0da26ddab5f3e7199bc2c57af82 *man/dat.Rd
+c955a5b2d687dbeec9c6d97e542283e6 *man/BICAM.Rd
 3d13bce7d5b725ad051ba5e573eb171e *vignettes/BICAM.Rmd
 9423ebd2a1bcb7c17a05caf8f94d8dac *vignettes/BICAM_Cov.Rmd
 0248ed953a4db4ea824df77c4ccfa49b *vignettes/BICAM_Output_1.png

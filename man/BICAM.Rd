@@ -59,9 +59,3 @@ A list of inputs and results
 \description{
 Bayesian Immune Cell Abundance Model (BICAM)
 }
-\examples{
-data(dat)
-BICAM(dat,2,1500,250,250)
-
-
-}

@@ -20,12 +20,7 @@
 #'
 #' @import rjags
 #'
-#' @examples
-#' data(dat)
-#' BICAM(dat,2,1500,250,250)
-#'
-#'
-#'@export
+#' @export
 BICAM <- function(dat,M,adapt,burn,it,
                   thin=1,ran_eff=1,chains=4,cores=4,v0_mu_logit=0.01,ncov=1,
                   model="Unstr",dis=NULL,tree=NULL,treelevels=NULL
@@ -36,7 +31,7 @@ BICAM <- function(dat,M,adapt,burn,it,
 
   #---------- Model ----------
   if(!(model == "Unstr" || model == "ExpDecay" || model == "Tree" || model == "TreeLevels" || model == "TreeScaled")){
-    stop("Invalid input for 'model' parameter.\nPlease enter model as 'Unstr', 'ExpDecay', 'Tree', or 'TreeScaled'")
+    stop("Invalid input for 'model' parameter.\nPlease enter model as 'Unstr', 'ExpDecay', 'Tree', 'TreeScaled', or 'TreeLevels'")
   }
 
   # Check if required matrices are missing
